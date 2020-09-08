@@ -6,7 +6,7 @@ const Expense   = require("../../model/Expense")
 
 
 router.get("/expenses",(req,res)=>{
-    Expense.find({}).exec((err,results)=>{
+    Expense.find({}).sort({'date':'desc'}).exec((err,results)=>{
         res.send(results)
     })
 
