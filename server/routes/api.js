@@ -5,7 +5,12 @@ const moment        = require('moment');
 
 const Expense   = require("../../model/Expense")
 
+const formatDate = date =>{
+    return moment(date).format("LLLL")
+}
+
 router.get("/expenses",(req,res)=>{
+    let q = {}
     const   group = req.query.group,
             total = req.query.total,
             d1    = req.query.d1,
@@ -31,16 +36,21 @@ router.get("/expenses",(req,res)=>{
     } else if(d1 || d2){
         if(d1 && d2){
             Expense.find({$and:[
-                {date : {$gte:d1}},
-                {date : {$lte:d2}}
+                {date : {$gt:d1}},
+                {date : {$lt:d2}}
             ]})
+            .sort({'date':'desc'})
             .exec((err,results)=>{
                 res.send(results)
             })
         } else{
-            Expense.find().and([{$or:[{date:{$gt:d1}},{date:{$gt:d2}}]},{date:{$lt:Date.now()}}]).exec((err,results)=>{
+            Expense.find({$and:[
+                    {date:{$gt:d1 || d2}},
+                    {date:{$lt:Date.now()}}
+            ]})
+            .sort({'date':'desc'})
+            .exec((err,results)=>{
                 res.send(results)
-                // res.send({...results,date:moment(results.date).format("YYYY-MM-DD")})
             })
         }
 
@@ -53,8 +63,7 @@ router.get("/expenses",(req,res)=>{
 
 router.post("/expense", (req,res)=>{
     let expenseData = {...req.body}
-    expenseData.date =  this ?  moment(expenseData.date).format("LLLL") : moment().format('LLLL')
-
+    expenseData.date =  this ? moment(expenseData.date).format("LLLL") : moment().format('LLLL')
     const newExpense = new Expense(expenseData) 
     newExpense.save().then((expense,err)=>{
         if(!err){

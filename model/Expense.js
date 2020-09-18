@@ -14,7 +14,7 @@ const Expense = mongoose.model("Expense",expenseSchema)
 
 module.exports = Expense
 
-expenses.forEach(e => {
-    let currentExpense = new Expense({...e, name: e.item})
-    currentExpense.save()
-})
+// expenses.forEach(e => {
+//     let currentExpense = new Expense({...e, name: e.item})
+//     currentExpense.save()
+// })
