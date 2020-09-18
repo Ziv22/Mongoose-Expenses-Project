@@ -30,10 +30,11 @@ router.get("/expenses",(req,res)=>{
         }
     } else if(d1 || d2){
         if(d1 && d2){
-            Expense.find().and([{date:{$gte:d1}},{date:{$lte:d2}}]).exec((err,results)=>{
-            // Expense.find({date:{$lt:d1}}).exec((err,results)=>{
-                console.log(`here 34`)
-                // res.send({date:moment(results.date).format("YYYY-MM-DD"),...results})
+            Expense.find({$and:[
+                {date : {$gte:d1}},
+                {date : {$lte:d2}}
+            ]})
+            .exec((err,results)=>{
                 res.send(results)
             })
         } else{
