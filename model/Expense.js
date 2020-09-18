@@ -1,8 +1,7 @@
-const mongoose      = require("mongoose")
-const expenses      = require("../expenses.json")
-
-mongoose.connect("mongodb://localhost:27017/expensesDB" , {useNewUrlParser: true})
-
+const   mongoose  = require("mongoose"),
+        expenses  = require("../expenses.json"),
+        moment    = require("moment") 
+        
 const Schema = mongoose.Schema
 const expenseSchema = new Schema({
     name:   String,
@@ -13,11 +12,9 @@ const expenseSchema = new Schema({
 
 const Expense = mongoose.model("Expense",expenseSchema)
 
-// expenses.forEach(e => {
-//     let currentExpense = new Expense(e)
-//     currentExpense.save()
-// })
-
-
 module.exports = Expense
 
+expenses.forEach(e => {
+    let currentExpense = new Expense({...e, name: e.item, date: moment(e.date).format("LLLL")})
+    currentExpense.save()
+})

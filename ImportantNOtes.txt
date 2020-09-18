@@ -1,0 +1,8 @@
+                // const activities = await Activity.find(tagsQuery)
+                // parsedTags.forEach(t => tagsQuery.tags["$in"].push(`mongoose.Types.ObjectId(${t})`))
+                // const a = JSON.stringify(mongoose.Types.ObjectId('5f61b83104b82d44a4a8e14f'),mongoose.Types.ObjectId('5f61b83104b82d44a4a8e14b'))
+                // const activities = await Activity.find( {"tags": {$in: [JSON.parse(a)]}})
+                // ==============
+                // const activities = await Activity.find( {"tags": {$in: [mongoose.Types.ObjectId("5f61b83104b82d44a4a8e14f"),mongoose.Types.ObjectId("5f61b83104b82d44a4a8e14b")]}})
+                // ==============
+                // res.send(activities)
