@@ -1,94 +1,99 @@
-const express       = require("express")
-const router        = express.Router()
-const mongoose      = require("mongoose")
-const moment        = require('moment');
+const   Expense       = require("../../model/Expense"),
+        express       = require("express"),
+        moment        = require('moment'),
+        router        = express.Router()
 
-const Expense   = require("../../model/Expense")
-
-const formatDate = date =>{
-    return moment(date).format("LLLL")
-}
-
-router.get("/expenses",(req,res)=>{
-    let q = {}
+router.get("/expenses",async (req,res)=>{
     const   group = req.query.group,
             total = req.query.total,
             d1    = req.query.d1,
             d2    = req.query.d2
 
-    if(group){
-        if(total) {
-            Expense.aggregate([
+    let     goesOn = true,
+            query = {}
+
+    query["$and"] = []
+
+    if(group && total){        
+        try{
+            const expenses = await Expense.aggregate([
                 {$match:{group}},
                 {
                     $group:
                         {_id: "$group",
                     totalAmount: {$sum: `$amount`}}
                 }
-            ]).exec((err,results)=>{
-                res.send(results)
-            })
-        } else {
-            Expense.find({group}).exec((err,results)=>{
-                res.send(results)
-            })
-        }
-    } else if(d1 || d2){
-        if(d1 && d2){
-            Expense.find({$and:[
-                {date : {$gt:d1}},
-                {date : {$lt:d2}}
-            ]})
-            .sort({'date':'desc'})
-            .exec((err,results)=>{
-                res.send(results)
-            })
-        } else{
-            Expense.find({$and:[
-                    {date:{$gt:d1 || d2}},
-                    {date:{$lt:Date.now()}}
-            ]})
-            .sort({'date':'desc'})
-            .exec((err,results)=>{
-                res.send(results)
-            })
-        }
+            ])
 
-    }else{
-        Expense.find({}).sort({'date':'desc'}).exec((err,results)=>{
-            res.send(results)
-        })
+            goesOn = false
+            res.send(expenses)
+            res.end()
+        }
+        catch(err){
+            res.send(err)
+            res.end()
+        }
+    }
+
+    if(group){
+        query["$and"].push({group})
+    }
+
+    if(d1 || d2){
+        if(d1 && d2){
+            query["$and"].push(
+                {date : {$gt:d1}},
+                {date : {$lt:d2}})
+        } else {
+            query["$and"].push(
+                {date:{$gt:d1 || d2}},
+                {date:{$lt:Date.now()}})
+        }
+    }
+
+    if(goesOn){
+        try{
+            const expenses = await Expense.find(query).sort({'date':'desc'})
+            res.send(expenses)
+            res.end()
+        }
+        catch(err){
+            res.send(err)
+            res.end()
+        }
     }
 })
 
 router.post("/expense", (req,res)=>{
-    let expenseData = {...req.body}
-    expenseData.date =  this ? moment(expenseData.date).format("LLLL") : moment().format('LLLL')
-    const newExpense = new Expense(expenseData) 
-    newExpense.save().then((expense,err)=>{
-        if(!err){
+    let expenseData     = {...req.body}
+    expenseData.date    =  expenseData.date ? moment(expenseData.date).format("LLLL") : moment().format('LLLL')
+    const newExpense    = new Expense(expenseData) 
+    newExpense.save()
+        .then( expense =>{
             console.log(`You payed ${expense.amount} for a ${expense.name}`)
             res.send(expense)
-
-        } else {
+            res.end()
+        })
+        .catch(err =>{
             res.send(err)
-        }
-    })
+            res.end()
+        })
 })
 
 router.put("/expense/:id/:group", (req,res)=>{
-    const id = req.params.id
-    const group = req.params.group
+    const   id    = req.params.id,
+            group = req.params.group
 
-    Expense.findByIdAndUpdate(id,{group}).then((success,err)=>{
-        if(!err){
-            res.send({message:`Expense ${success.nam} changed from ${success.group} to ${group}`})
-        } else {
+    Expense.findByIdAndUpdate(id,{group})
+        .then(expense =>{
+            console.log({message:`Expense ${expense.name} changed from ${expense.group} to ${group}`})
+            res.send(expense)
+            res.end()
+        }) 
+        .catch(err =>{
             res.send(err)
-        }
-    })
+            res.end()
+        })
 })
-
-
 
 module.exports = router
