@@ -9,42 +9,41 @@ router.get("/expenses",async (req,res)=>{
             d1    = req.query.d1,
             d2    = req.query.d2
 
-    let     goesOn = true,
-            query = {}
+    let     query = {},
+            goesOn = true
+            
+    if(group || d1 || d2){
 
-    query["$and"] = []
+        query["$and"] = []
 
-    if(group && total){        
-        try{
-            const expenses = await Expense.aggregate([
-                {$match:{group}},
-                {
-                    $group:
-                        {_id: "$group",
-                    totalAmount: {$sum: `$amount`}}
-                }
-            ])
-
-            goesOn = false
-            res.send(expenses)
-            res.end()
+        if(group && total){        
+            try{
+                const expenses = await Expense.aggregate([
+                    {$match:{group}},
+                    {
+                        $group:
+                            {_id: "$group",
+                        totalAmount: {$sum: `$amount`}}
+                    }
+                ])
+    
+                goesOn = false
+                res.send(expenses)
+                res.end()
+            }
+            catch(err){
+                res.send(err)
+                res.end()
+            }
+        }else if(group){
+            query["$and"].push({group})
         }
-        catch(err){
-            res.send(err)
-            res.end()
-        }
-    }
 
-    if(group){
-        query["$and"].push({group})
-    }
-
-    if(d1 || d2){
         if(d1 && d2){
             query["$and"].push(
                 {date : {$gt:d1}},
                 {date : {$lt:d2}})
-        } else {
+        } else if(d1 || d2) {
             query["$and"].push(
                 {date:{$gt:d1 || d2}},
                 {date:{$lt:Date.now()}})
@@ -53,7 +52,9 @@ router.get("/expenses",async (req,res)=>{
 
     if(goesOn){
         try{
+            console.log(query);
             const expenses = await Expense.find(query).sort({'date':'desc'})
+            expenses.forEach(e => {e.date = moment(e.date).format("LLLL")})
             res.send(expenses)
             res.end()
         }
